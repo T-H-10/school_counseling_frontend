@@ -15,15 +15,35 @@ export default function StudentsPage() {
   const queryClient = useQueryClient();
   const navigate = useNavigate();
 
+  const [modalOpen, setModalOpen] = useState(false);
+  const [mode, setMode] = useState<"create" | "edit">("create");
+  const [editingStudent, setEditingStudent] = useState<any>(null);
+  const [formErrors, setFormErrors] = useState<any>(null);
+  const [search, setSearch] = useState("");
+  const [sortField, setSortField] = useState<"full_name" | "id_number">("full_name");
+  const [sortOrder, setSortOrder] = useState<"asc" | "desc">("asc");
+  
   const { data: students, isLoading } = useQuery({
     queryKey: ["students"],
     queryFn: getStudents,
   });
 
-  const [modalOpen, setModalOpen] = useState(false);
-  const [mode, setMode] = useState<"create" | "edit">("create");
-  const [editingStudent, setEditingStudent] = useState<any>(null);
-  const [formErrors, setFormErrors] = useState<any>(null);
+  const processedStudents = students?.filter((s) => {
+    const text = search.toLowerCase();
+
+    return (
+      s.full_name.toLowerCase().includes(text) ||
+      s.id_number.includes(text)
+    );
+  })
+  .sort((a, b) => {
+    const aVal = a[sortField] || "";
+    const bVal = b[sortField] || "";
+
+    if (aVal < bVal) return sortOrder === "asc" ? -1 : 1;
+    if (aVal > bVal) return sortOrder === "asc" ? 1 : -1;
+    return 0;
+  });
 
   const deleteMutation = useMutation({
     mutationFn: deleteStudent,
@@ -69,7 +89,29 @@ export default function StudentsPage() {
       </button>
 
       <hr />
+      <div style={{ marginBottom: 10 }}>
+        <input
+            placeholder="חיפוש לפי שם או ת״ז..."
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+        />
 
+        <select
+            value={sortField}
+            onChange={(e) => setSortField(e.target.value as any)}
+        >
+            <option value="full_name">מיין לפי שם</option>
+            <option value="id_number">מיין לפי ת"ז</option>
+        </select>
+
+        <button
+            onClick={() =>
+            setSortOrder((prev) => (prev === "asc" ? "desc" : "asc"))
+            }
+        >
+            {sortOrder === "asc" ? "⬆️" : "⬇️"}
+        </button>
+        </div>
       {/* ================= MODAL ================= */}
       <Modal open={modalOpen} onClose={closeModal}>
         <h2>
@@ -128,7 +170,12 @@ export default function StudentsPage() {
         </thead>
 
         <tbody>
-          {students?.map((s) => (
+        {processedStudents?.length === 0 ? (
+            <tr>
+                <td colSpan={5}>לא נמצאו תלמידים</td>
+            </tr>
+            ):
+          (processedStudents?.map((s) => (
             <tr key={s.id}>
               <td>{s.full_name}</td>
               <td>{s.id_number}</td>
@@ -152,7 +199,7 @@ export default function StudentsPage() {
                 </button>
               </td>
             </tr>
-          ))}
+          )))} 
         </tbody>
       </table>
     </div>
