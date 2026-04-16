@@ -7,6 +7,7 @@ import {
 } from "../features/students/students.api";
 
 import StudentForm from "../features/students/StudentForm";
+import Modal from "../components/ui/Modal";
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 
@@ -18,9 +19,11 @@ export default function StudentsPage() {
     queryKey: ["students"],
     queryFn: getStudents,
   });
-  
-  const [formErrors, setFormErrors] = useState<any>(null);
+
+  const [modalOpen, setModalOpen] = useState(false);
+  const [mode, setMode] = useState<"create" | "edit">("create");
   const [editingStudent, setEditingStudent] = useState<any>(null);
+  const [formErrors, setFormErrors] = useState<any>(null);
 
   const deleteMutation = useMutation({
     mutationFn: deleteStudent,
@@ -37,6 +40,23 @@ export default function StudentsPage() {
     mutationFn: ({ id, data }: any) => updateStudent(id, data),
   });
 
+  const openCreate = () => {
+    setMode("create");
+    setEditingStudent(null);
+    setModalOpen(true);
+  };
+
+  const openEdit = (student: any) => {
+    setMode("edit");
+    setEditingStudent(student);
+    setModalOpen(true);
+  };
+
+  const closeModal = () => {
+    setModalOpen(false);
+    setEditingStudent(null);
+    setFormErrors(null);
+  };
 
   if (isLoading) return <div>Loading...</div>;
 
@@ -44,44 +64,60 @@ export default function StudentsPage() {
     <div>
       <h1>Students</h1>
 
-      <StudentForm
-        initialData={editingStudent}
-        onSubmit={(data) => {
-            setFormErrors(null);
-
-            if (editingStudent) {
-                updateMutation.mutate(
-                    { id: editingStudent.id, data},
-                    {
-                        onSuccess: () => {
-                            setEditingStudent(null);
-                            queryClient.invalidateQueries({queryKey: ["students"]});
-                        },
-                        onError: (err: any) => {
-                            setFormErrors(err.response?.data);
-                        },
-                    }
-                );
-            }
-            else {
-                createMutation.mutate(data, {
-                onSuccess: () => {
-                    queryClient.invalidateQueries({ queryKey: ["students"] });
-                },
-                onError: (err: any) => {
-                    if (err.response?.data) {
-                    setFormErrors(err.response.data);
-                    }
-                },
-                });
-            }
-        }}
-        loading={createMutation.isPending || updateMutation.isPending}
-        errors={formErrors}
-    />
+      <button onClick={openCreate}>
+        ➕ הוסף תלמיד
+      </button>
 
       <hr />
 
+      {/* ================= MODAL ================= */}
+      <Modal open={modalOpen} onClose={closeModal}>
+        <h2>
+          {mode === "create" ? "הוספת תלמיד" : "עריכת תלמיד"}
+        </h2>
+
+        <StudentForm
+          initialData={mode === "edit" ? editingStudent : undefined}
+          onSubmit={(data) => {
+            setFormErrors(null);
+
+            if (mode === "create") {
+              createMutation.mutate(data, {
+                onSuccess: () => {
+                  closeModal();
+                  queryClient.invalidateQueries({
+                    queryKey: ["students"],
+                  });
+                },
+                onError: (err: any) => {
+                  setFormErrors(err.response?.data);
+                },
+              });
+            } else {
+              updateMutation.mutate(
+                { id: editingStudent.id, data },
+                {
+                  onSuccess: () => {
+                    closeModal();
+                    queryClient.invalidateQueries({
+                      queryKey: ["students"],
+                    });
+                  },
+                  onError: (err: any) => {
+                    setFormErrors(err.response?.data);
+                  },
+                }
+              );
+            }
+          }}
+          loading={
+            createMutation.isPending || updateMutation.isPending
+          }
+          errors={formErrors}
+        />
+      </Modal>
+
+      {/* ================= TABLE ================= */}
       <table border={1}>
         <thead>
           <tr>
@@ -106,25 +142,19 @@ export default function StudentsPage() {
                 >
                   Delete
                 </button>
-                <button onClick={() => setEditingStudent(s)}>
-                    Edit
+
+                <button onClick={() => openEdit(s)}>
+                  Edit
                 </button>
-              <button onClick={() => navigate(`/students/${s.id}`)}>
-                פתח
-            </button>
+
+                <button onClick={() => navigate(`/students/${s.id}`)}>
+                  פתח
+                </button>
               </td>
             </tr>
           ))}
         </tbody>
       </table>
-      {editingStudent && (
-        <div style={{ background: "#eef", padding: 10 }}>
-            ✏️ עריכה של: {editingStudent.full_name}
-            <button onClick={() => setEditingStudent(null)}>
-            ביטול
-            </button>
-        </div>
-        )}
     </div>
   );
 }
