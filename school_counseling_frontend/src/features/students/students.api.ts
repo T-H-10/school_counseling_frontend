@@ -14,3 +14,8 @@ export const createStudent = async (data: Partial<Student>) => {
   const res = await httpClient.post("/students/", data);
   return res.data;
 };
+
+export const updateStudent = async (id: number, data: any) => {
+    const res = await httpClient.put(`/students/${id}/`, data);
+    return res.data;
+  };
