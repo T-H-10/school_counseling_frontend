@@ -1,10 +1,21 @@
 import { httpClient } from "../../api/httpClient";
 import type { Student } from "./student.types";
 
-export const getStudents = async (): Promise<Student[]> => {
-  const res = await httpClient.get("/students/");
-  return res.data;
-};
+export const getStudents = async (params: {
+    page?: number;
+    search?: string;
+    ordering?: string;
+  }) => {
+    const res = await httpClient.get("/students/", {
+      params: {
+        ...(params.page ? { page: params.page } : {}),
+        ...(params.search ? { search: params.search } : {}),
+        ...(params.ordering ? { ordering: params.ordering } : {}),
+      },
+    });
+  
+    return res.data;
+  };
 
 export const deleteStudent = async (id: number) => {
   await httpClient.delete(`/students/${id}/`);
