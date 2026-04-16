@@ -11,11 +11,11 @@ import {
     updateStudent,
   } from "../features/students/students.api";
   
-  import StudentForm from "../features/students/StudentForm";
   import Modal from "../components/ui/Modal";
   
   import { useState, useEffect } from "react";
   import { useNavigate } from "react-router-dom";
+import StudentForm from "../features/students/components/StudentForm";
   
   export default function StudentsPage() {
     const queryClient = useQueryClient();

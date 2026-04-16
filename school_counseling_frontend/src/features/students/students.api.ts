@@ -15,7 +15,7 @@ export const getStudents = async (params: {
     });
   
     return res.data;
-  };
+};
 
 export const deleteStudent = async (id: number) => {
   await httpClient.delete(`/students/${id}/`);
@@ -29,4 +29,9 @@ export const createStudent = async (data: Partial<Student>) => {
 export const updateStudent = async (id: number, data: any) => {
     const res = await httpClient.put(`/students/${id}/`, data);
     return res.data;
-  };
+};
+
+export const getStudent = async (id: number) => {
+    const res = await httpClient.get(`/students/${id}/`);
+    return res.data;
+};
