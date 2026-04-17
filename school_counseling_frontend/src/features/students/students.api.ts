@@ -35,3 +35,18 @@ export const getStudent = async (id: number) => {
     const res = await httpClient.get(`/students/${id}/`);
     return res.data;
 };
+
+export const getStudentEvents = async (id: number) => {
+    const res = await httpClient.get(`/studentEvents/?student=${id}`);
+    return res.data;
+  };
+  
+  export const getStudentEnrollments = async (id: number) => {
+    const res = await httpClient.get(`/enrollments/?student=${id}`);
+    return res.data;
+  };
+  
+  export const getStudentSessions = async (id: number) => {
+    const res = await httpClient.get(`/classSessions/?student=${id}`);
+    return res.data;
+  };
