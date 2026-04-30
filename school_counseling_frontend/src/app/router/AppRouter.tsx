@@ -5,6 +5,7 @@ import StudentDetailsPage from "../../pages/StudentDetailsPage";
 import ProtectedRoute from "./ProtectedRoute";
 import Header from "../../components/common/Header";
 import CalendarPage from "../../pages/CalendarPage";
+import DashboardPage from "../../pages/DashboardPage";
 
 function AppLayout({ children }: { children: React.ReactNode }) {
   return (
@@ -26,7 +27,7 @@ export default function AppRouter() {
           element={
             <ProtectedRoute>
               <AppLayout>
-                <div>Dashboard (פעולות אחרונות והתראות)</div>
+                <DashboardPage />
               </AppLayout>
             </ProtectedRoute>
           }
