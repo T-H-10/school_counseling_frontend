@@ -1,4 +1,5 @@
 import React, { useMemo } from "react";
+import { formatHebrewDate } from "../../utils/hebrewDate";
 
 interface RawEvent {
   id: string | number;
@@ -85,6 +86,7 @@ export default function WeeklyView({
         {days.map((d) => (
           <div key={d.toISOString()} className="calendar-day-header">
             <div>{d.toLocaleDateString()}</div>
+            <div style={{ fontSize: 12, color: "#666" }}>{formatHebrewDate(d)}</div>
             <div style={{ fontSize: 12, color: "#666" }}>{d.toLocaleDateString(undefined, { weekday: "long" })}</div>
           </div>
         ))}

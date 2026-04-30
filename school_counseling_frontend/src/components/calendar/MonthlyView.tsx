@@ -1,4 +1,5 @@
 import React, { useMemo } from "react";
+import { formatHebrewDate, formatHebrewDayShort } from "../../utils/hebrewDate";
 
 interface EventItem {
   id: number | string;
@@ -55,6 +56,10 @@ export default function MonthlyView({ events, monthAnchor }: { events: EventItem
     <div>
       <h3 style={{ marginBottom: 8 }}>
         {anchor.toLocaleDateString(undefined, { month: "long", year: "numeric" })}
+        {" • "}
+        <span style={{fontSize: 14, color: "#666", marginLeft: 8}}>
+            {formatHebrewDate(anchor, {month: "long", year: "numeric"})}
+        </span>
       </h3>
 
       <div style={{ display: "grid", gridTemplateColumns: "repeat(7, 1fr)", gap: 6 }}>
@@ -84,6 +89,7 @@ export default function MonthlyView({ events, monthAnchor }: { events: EventItem
             >
               <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
                 <div style={{ fontSize: 12, color: isCurrentMonth ? "#000" : "#999" }}>{d.getDate()}</div>
+                <div style={{ fontSize: 11, color: "#666"}}>{formatHebrewDayShort(d)}</div>
               </div>
 
               <div style={{ marginTop: 6, display: "flex", flexDirection: "column", gap: 6 }}>
