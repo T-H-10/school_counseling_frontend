@@ -3,10 +3,9 @@ import React, { useMemo } from "react";
 interface RawEvent {
   id: string | number;
   title: string;
-  // server may provide either start/end or date:
-  start?: string; // ISO datetime
-  end?: string; // ISO datetime
-  date?: string; // ISO datetime (single point)
+  start?: string;
+  end?: string;
+  date?: string;
   description?: string;
   [k: string]: any;
 }
@@ -17,45 +16,53 @@ function parseISO(s?: string) {
   return isNaN(d.getTime()) ? null : d;
 }
 
-function startOfWeek(date: Date) {
-  // Monday as first day
-  const d = new Date(date);
-  const day = d.getDay(); // 0 Sun .. 6 Sat
-  const diff = d.getDate() - day + (day === 0 ? -6 : 1);
-  const monday = new Date(d.setDate(diff));
-  monday.setHours(0, 0, 0, 0);
-  return monday;
-}
-
-export default function WeeklyView({ events }: { events: RawEvent[] }) {
+export default function WeeklyView({
+  events,
+  weekStart,
+}: {
+  events: RawEvent[];
+  weekStart?: Date;
+}) {
   const hoursStart = 7;
   const hoursEnd = 20;
-  const hourHeight = 60; // px per hour
+  const hourHeight = 60;
   const totalHours = hoursEnd - hoursStart;
   const dayHeight = totalHours * hourHeight;
 
-  const today = new Date();
-  const weekStart = useMemo(() => startOfWeek(today), [today]);
+  // use provided weekStart (already set to Sunday) or compute from today
+  const startOfWeek = useMemo(() => {
+    if (weekStart) {
+      const d = new Date(weekStart);
+      d.setHours(0, 0, 0, 0);
+      return d;
+    }
+    const now = new Date();
+    const day = now.getDay();
+    const d = new Date(now);
+    d.setDate(now.getDate() - day);
+    d.setHours(0, 0, 0, 0);
+    return d;
+  }, [weekStart]);
 
   const days = useMemo(() => {
     return Array.from({ length: 7 }).map((_, i) => {
-      const d = new Date(weekStart);
-      d.setDate(weekStart.getDate() + i);
+      const d = new Date(startOfWeek);
+      d.setDate(startOfWeek.getDate() + i);
       d.setHours(0, 0, 0, 0);
       return d;
     });
-  }, [weekStart]);
+  }, [startOfWeek]);
 
-  // normalize events: compute start/end Date
   const normalized = useMemo(() => {
-    return events.map((ev) => {
-      const start = parseISO(ev.start) ?? parseISO(ev.date) ?? null;
-      const end = parseISO(ev.end) ?? (start ? new Date(start.getTime() + 60 * 60 * 1000) : null); // default 1h
-      return { ...ev, __start: start, __end: end };
-    }).filter((e) => e.__start && e.__end);
+    return events
+      .map((ev) => {
+        const start = parseISO(ev.start) ?? parseISO(ev.date) ?? null;
+        const end = parseISO(ev.end) ?? (start ? new Date(start.getTime() + 60 * 60 * 1000) : null);
+        return { ...ev, __start: start, __end: end };
+      })
+      .filter((e) => e.__start && e.__end);
   }, [events]);
 
-  // group events per day
   const byDay = useMemo(() => {
     const map: Record<string, typeof normalized> = {};
     for (const d of days) {
@@ -63,7 +70,6 @@ export default function WeeklyView({ events }: { events: RawEvent[] }) {
       map[key] = [];
     }
     for (const ev of normalized) {
-      // place event on its start day only (multi-day not supported here)
       const key = ev.__start!.toISOString().slice(0, 10);
       if (map[key]) map[key].push(ev);
     }
@@ -102,17 +108,15 @@ export default function WeeklyView({ events }: { events: RawEvent[] }) {
             const dayEvents = byDay[key] ?? [];
             return (
               <div key={key} className="calendar-day-column" style={{ height: dayHeight }}>
-                {/* hour rows background */}
                 {Array.from({ length: totalHours }).map((_, i) => (
                   <div key={i} className="calendar-grid-cell" style={{ height: hourHeight }} />
                 ))}
 
-                {/* events */}
                 {dayEvents.map((ev) => {
                   const s = ev.__start as Date;
                   const e = ev.__end as Date;
                   const startMinutes = (s.getHours() * 60 + s.getMinutes()) - hoursStart * 60;
-                  const durationMinutes = Math.max(15, (e.getTime() - s.getTime()) / 60000); // min 15m
+                  const durationMinutes = Math.max(15, (e.getTime() - s.getTime()) / 60000);
                   const top = (startMinutes / 60) * hourHeight;
                   const height = (durationMinutes / 60) * hourHeight;
                   return (
