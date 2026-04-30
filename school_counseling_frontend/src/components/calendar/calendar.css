@@ -1,0 +1,100 @@
+.calendar-weekly {
+    font-family: sans-serif;
+    direction: rtl; /* since your UI is Hebrew */
+  }
+  
+  .calendar-header {
+    display: grid;
+    grid-template-columns: 80px repeat(7, 1fr);
+    gap: 4px;
+    align-items: center;
+    margin-bottom: 6px;
+  }
+  
+  .calendar-hour-col {
+    width: 80px;
+  }
+  
+  .calendar-day-header {
+    padding: 6px;
+    background: #fafafa;
+    border: 1px solid #eee;
+    border-radius: 6px;
+    text-align: center;
+  }
+  
+  .calendar-body {
+    display: grid;
+    grid-template-columns: 80px 1fr;
+    gap: 8px;
+    position: relative;
+  }
+  
+  /* left hours column */
+  .calendar-hour-column {
+    display: flex;
+    flex-direction: column;
+    gap: 0;
+  }
+  
+  .calendar-hour-cell {
+    border-right: 0px;
+    padding-right: 6px;
+    box-sizing: border-box;
+    position: relative;
+  }
+  
+  .hour-label {
+    color: #666;
+    font-size: 12px;
+    height: 100%;
+    display: flex;
+    align-items: flex-start;
+    justify-content: flex-end;
+  }
+  
+  /* days grid */
+  .calendar-days-grid {
+    display: grid;
+    grid-template-columns: repeat(7, 1fr);
+    gap: 8px;
+    position: relative;
+  }
+  
+  .calendar-day-column {
+    background: #fff;
+    border: 1px solid #eee;
+    border-radius: 6px;
+    position: relative;
+    overflow: visible;
+  }
+  
+  /* horizontal hour lines */
+  .calendar-grid-cell {
+    border-top: 1px dashed #f0f0f0;
+    box-sizing: border-box;
+  }
+  
+  /* events */
+  .calendar-event {
+    position: absolute;
+    left: 6px;
+    right: 6px;
+    background: linear-gradient(180deg, #60a5fa, #3b82f6);
+    color: white;
+    padding: 6px;
+    border-radius: 6px;
+    box-shadow: 0 2px 6px rgba(0,0,0,0.08);
+    overflow: hidden;
+    font-size: 12px;
+  }
+  
+  .event-title {
+    font-weight: 600;
+    line-height: 1;
+  }
+  
+  .event-time {
+    font-size: 11px;
+    opacity: 0.9;
+  }

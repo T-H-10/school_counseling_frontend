@@ -1,37 +1,34 @@
-// src/pages/CalendarPage.tsx
+import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { getEvents } from "../api/events.api";
+import ViewToggle from "../components/ViewToggle";
+import MonthlyView from "../components/calendar/MonthlyView";
+import WeeklyView from "../components/calendar/WeeklyView";
+import "../components/calendar/calendar.css";
 
 export default function CalendarPage() {
+  // ...existing code...
   const { data, isLoading } = useQuery({
     queryKey: ["events"],
     queryFn: getEvents,
   });
 
+  const [view, setView] = useState<"monthly" | "weekly">("weekly"); // default weekly
+  const events = data?.results ?? [];
+
   if (isLoading) return <div>טוען אירועים...</div>;
-
-
-  const grouped: Record<string, any[]> = {};
-  (data.results || []).forEach((ev: any) => {
-    const date = ev.date?.slice(0, 10) ?? "לא ידוע";
-    (grouped[date] ??= []).push(ev);
-  });
 
   return (
     <div>
       <h1>לוח שנה</h1>
-      {Object.keys(grouped).length === 0 && <div>אין אירועים</div>}
-      {Object.entries(grouped).map(([date, items]) => (
-        <div key={date} style={{ marginBottom: 12, padding: 8, border: "1px solid #eee", borderRadius: 6 }}>
-          <b>{date}</b>
-          {items.map((it: any) => (
-            <div key={it.id}>
-              <div>{it.title}</div>
-              <div style={{ fontSize: 12, color: "gray" }}>{it.description}</div>
-            </div>
-          ))}
-        </div>
-      ))}
+
+      <ViewToggle currentView={view} onChangeView={setView} />
+
+      {view === "monthly" ? (
+        <MonthlyView events={events} />
+      ) : (
+        <WeeklyView events={events} />
+      )}
     </div>
   );
 }
