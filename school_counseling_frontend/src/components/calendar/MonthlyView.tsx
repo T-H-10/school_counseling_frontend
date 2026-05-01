@@ -52,6 +52,7 @@ export default function MonthlyView({ events, monthAnchor }: { events: EventItem
     return g;
   }, [events]);
 
+  
   return (
     <div>
       <h3 style={{ marginBottom: 8 }}>

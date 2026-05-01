@@ -1,4 +1,4 @@
-import React, { useMemo } from "react";
+import React, { useEffect, useMemo, useState } from "react";
 import { formatHebrewDate } from "../../utils/hebrewDate";
 
 interface RawEvent {
@@ -78,7 +78,56 @@ export default function WeeklyView({
   }, [normalized, days]);
 
   const formatTime = (d: Date) => d.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
+  const HEB_CAL_CACHE_KEY = "hebcalDateCache_v1";
+  const [hebrewMap, setHebrewMap] = useState<Map<string, string>>(new Map());
 
+  const loadHebrewDates = async (dates: Date[]) => {
+    const raw = localStorage.getItem(HEB_CAL_CACHE_KEY);
+    const cache = raw ? (JSON.parse(raw) as Record<string, string>) : {};
+    const toFetch = dates
+      .map((d) => d.toISOString().slice(0, 10))
+      .filter((ds, i, arr) => !cache[ds] && arr.indexOf(ds) === i);
+
+    if (toFetch.length > 0) {
+      await Promise.all(
+        toFetch.map(async (dateStr) => {
+          try {
+            const res = await fetch(`https://www.hebcal.com/converter?cfg=json&date=${dateStr}&g2h=1`);
+            if (!res.ok) throw new Error("bad response");
+            const json = await res.json();
+            cache[dateStr] = json?.hebrew ?? cache[dateStr] ?? "";
+          } catch {
+            // keep fallback empty; will use formatHebrewDate later
+            cache[dateStr] = cache[dateStr] ?? "";
+          }
+        })
+      );
+      localStorage.setItem(HEB_CAL_CACHE_KEY, JSON.stringify(cache));
+    }
+
+    const map = new Map<string, string>();
+    dates.forEach((d) => {
+      const key = d.toISOString().slice(0, 10);
+      map.set(key, cache[key] || "");
+    });
+    return map;
+  };
+
+  useEffect(() => {
+    let mounted = true;
+    (async () => {
+      try {
+        const map = await loadHebrewDates(days);
+        if (mounted) setHebrewMap(map);
+      } catch {
+        // ignore, fallback handled in render
+      }
+    })();
+    return () => {
+      mounted = false;
+    };
+  }, [days]);
+  
   return (
     <div className="calendar-weekly">
       <div className="calendar-header">
@@ -86,7 +135,7 @@ export default function WeeklyView({
         {days.map((d) => (
           <div key={d.toISOString()} className="calendar-day-header">
             <div>{d.toLocaleDateString()}</div>
-            <div style={{ fontSize: 12, color: "#666" }}>{formatHebrewDate(d)}</div>
+            <div style={{ fontSize: 12, color: "#666" }}>{hebrewMap.get(d.toISOString().slice(0, 10)) || formatHebrewDate(d)}</div>
             <div style={{ fontSize: 12, color: "#666" }}>{d.toLocaleDateString(undefined, { weekday: "long" })}</div>
           </div>
         ))}
